@@ -1,6 +1,6 @@
 var getConnection = require('./db.js');
 
-var skills = {
+var skillsObj = {
     insert:function(skills,sql){
         // difference of new skills
         existing_skills = sql.query('select from skills where in(?)',skills)
@@ -18,8 +18,7 @@ exports.subscriptions = {
         let sql = null;
         try {
             sql = getConnection();
-
-            skills.insert(skills,sql);
+            skillsObj.insert(skills,sql);
             
             // insert subscription
             sql.query('insert into subscriptions(email) values(?)',
@@ -67,8 +66,8 @@ exports.employees = {
         let sql = null;
         try {
             let sql =  getConnection();
-
-            skills.insert(skills,sql);
+            console.log(sql)
+            skillsObj.insert(skills,sql);
 
             // insert employee
             sql.query('insert into employee(email, password) values ?, ?',
@@ -93,7 +92,7 @@ exports.employees = {
                  sql.query('ROLLBACK');
                 sql.release()
             }
-            return 0;
+            return error;
         }
     }
 }
