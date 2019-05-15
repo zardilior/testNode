@@ -1,6 +1,6 @@
 var database = require('./db.js');
 
-exports.skills = {
+var skills = {
     insert:function(skills,sql){
         // difference of new skills
         existing_skills = sql.query('select from skills where in(?)',skills)
