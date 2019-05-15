@@ -1,4 +1,4 @@
-var database = require('./db.js');
+var getConnection = require('./db.js');
 
 var skills = {
     insert:function(skills,sql){
@@ -17,7 +17,7 @@ exports.subscriptions = {
     create : function(email,skills){
         let sql = null;
         try {
-            sql = database.getConnection();
+            sql = getConnection();
 
             skills.insert(skills,sql);
             
@@ -47,7 +47,7 @@ exports.subscriptions = {
 exports.employees = {
     getMatching : function(account){
         // select * from employees that have the skills join
-        let sql =  database.getConnection();
+        let sql =  getConnection();
         sql.query(`
             select employees.*,skills.* from employees 
             inner join employees_skills
@@ -66,7 +66,7 @@ exports.employees = {
     create : function(email,password,skills){
         let sql = null;
         try {
-            let sql =  database.getConnection();
+            let sql =  getConnection();
 
             skills.insert(skills,sql);
 

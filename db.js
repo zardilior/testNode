@@ -3,9 +3,16 @@
 var mysql = require('mysql');
 
 //local mysql db connection
-module.exports = mysql.createPool({
+var pool = mysql.createPool({
     host     : 'localhost',
     user     : 'root',
-    password : 'root',
-    database : 'guess'
+    password : '',
+    database : 'example'
 });
+module.exports =  getConnection = function() {
+    pool.getConnection(function(err, connection) {
+        if(err) throw err;
+        return connection;
+    });
+};
+
