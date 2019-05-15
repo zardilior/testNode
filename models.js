@@ -89,9 +89,9 @@ exports.employees = {
             conn.release()
 
         } catch (error) {
-            if (conn != null) {
-                 conn.query('ROLLBACK');
-                conn.release()
+            if (sql != null) {
+                 sql.query('ROLLBACK');
+                sql.release()
             }
             return 0;
         }
