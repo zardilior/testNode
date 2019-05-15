@@ -9,8 +9,8 @@ var pool = mysql.createPool({
     password : '',
     database : 'example'
 });
-module.exports = function() {
-    return pool.getConnection(function(err, connection) {
+module.exports = async function() {
+    await pool.getConnection(function(err, connection) {
         if(err) throw err;
         return connection;
     });
