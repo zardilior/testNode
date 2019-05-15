@@ -1,9 +1,11 @@
-var getConnection = require('./db.js');
+var pool = require('./db.js');
+getConnection = pool.getConnection()
 
 var skillsObj = {
-    insert:function(skills,sql){
+    insert: async function(skills,sql){
         // difference of new skills
-        existing_skills = sql.query('select from skills where in(?)',skills)
+        console.log(sql)
+        existing_skills = await sql.query('select from skills where in ?',skills)
         new_skills = skills.filter((x)=>!existing_skills.included(x))
 
         // insert new skills
@@ -14,27 +16,24 @@ var skillsObj = {
 }
 
 exports.subscriptions = {
-    create : function(email,skills){
+    create : async function(email,skills){
         let sql = null;
         try {
-            sql = getConnection();
+            sql = await getConnection();
             skillsObj.insert(skills,sql);
-            
+            console.log(sql); 
             // insert subscription
-            sql.query('insert into subscriptions(email) values(?)',
-                email,
-                // create relations
-                function(err, result){
-                    if(err)
-                        return 1
-                    id_subscription = result.insertId   
-                    modified_skills = skills.map((x)=>[id_subscription,x])
-                    sql.query(
-                        'insert into subscriptions_skills(id_subscription,skill) values ?',
-                        modified_skills,
-                    )
-                }
-            );
+            let result = sql.query(
+                'insert into subscriptions(email) values(?)',
+                email
+            )
+            id_subscription = result.insertId   
+            modified_skills = skills.map((x)=>[id_subscription,x])
+            result = result && await sql.query(
+                'insert into subscriptions_skills(id_subscription,skill) values ?',
+                modified_skills
+            )
+            return result;
         } catch (error) {
             if (conn != null) {
                 conn.query('ROLLBACK');
@@ -44,10 +43,10 @@ exports.subscriptions = {
     },
 }
 exports.employees = {
-    getMatching : function(account){
+    getMatching : async function(account){
         // select * from employees that have the skills join
-        let sql =  getConnection();
-        sql.query(`
+        let sql =  await getConnection();
+        var matching = await sql.query(`
             select employees.*,skills.* from employees 
             inner join employees_skills
             on employees.id=employees_skills.id_employee 
@@ -60,39 +59,42 @@ exports.employees = {
                 where skills.id  in (?)
                 and where employees_skills.id_employee = employees.id_employee 
             ) > 0 
-        `)
+        `, account)
+        return matching;
     },
-    create : function(email,password,skills){
+    create : async function(email,password,skills){
         let sql = null;
         try {
-            let sql =  getConnection();
+            let sql =  await getConnection();
             console.log(sql)
             skillsObj.insert(skills,sql);
 
             // insert employee
-            sql.query('insert into employee(email, password) values ?, ?',
+            await sql.query('insert into employee(email, password) values ?, ?',
                 email,
                 password,
                 // insert relations
                 function(err, result){
                     if(err)
-                        return 1
+                        return 0
                     id_employee = result.insertId   
                     modified_skills = skills.map((x)=>[id_employee,x])
                     sql.query(
                         'insert into employee_skills(id_employee,skill) values ?',
                         modified_skills,
                     )
+                    return 1
                 }
             )
-            conn.release()
+            sql.release()
 
         } catch (error) {
             if (sql != null) {
                  sql.query('ROLLBACK');
                 sql.release()
             }
-            return error;
+            console.log(error)
+            return 0;
         }
     }
 }
